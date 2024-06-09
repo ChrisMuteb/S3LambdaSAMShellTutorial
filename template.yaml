@@ -1,0 +1,54 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: A starter AWS Lambda function.
+
+Resources:
+  HelloWorldJava17:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: org.example.LogicToExportData::handleRequest
+      Runtime: java17
+      CodeUri: s3://BUCKET_NAME/PATH_TO_JAR  # This will be replaced by the script
+      Description: A starter AWS Lambda function.
+      MemorySize: 128
+      Timeout: 3
+      Environment:
+        Variables:
+          ENV_VAR1: "value1"
+          ENV_VAR2: "value2"
+      Events:
+        ScheduledEvent:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0 18 * * 3)  # Every Wednesday at 18:00
+            Input: 
+              '{"key1": "value1", "key2": "value2"}'
+
+# IAM role for Lambda function to allow invocation from CloudWatch Events
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "*"
+              - Effect: Allow
+                Action: lambda:InvokeFunction
+                Resource: "*"
+              - Effect: Allow
+                Action: events:PutRule
+                Resource: "*"
